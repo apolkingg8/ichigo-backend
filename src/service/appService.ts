@@ -9,7 +9,7 @@ export class AppService {
 
     init = ()=> {
         this.app = express()
-        this.app.get('ping', (req, res)=> {
+        this.app.get('/ping', (req, res)=> {
             res.status(200).send('pong')
         })
     }

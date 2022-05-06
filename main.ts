@@ -1,4 +1,4 @@
-import appService from "./service/appService";
+import appService from "./src/service/appService";
 
 appService.init()
 appService.start()
