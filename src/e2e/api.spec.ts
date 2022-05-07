@@ -1,5 +1,6 @@
 import appService from "../service/appService";
 import fetch from 'node-fetch'
+import dbService from "../service/dbService";
 
 describe('api e2e', ()=> {
     const host = `http://localhost:${appService.PORT}`
@@ -7,6 +8,10 @@ describe('api e2e', ()=> {
     beforeAll(async ()=> {
         appService.init()
         await appService.start()
+    })
+
+    beforeEach(async ()=> {
+        await dbService.reset()
     })
 
     afterAll(async ()=> {
@@ -48,5 +53,23 @@ describe('api e2e', ()=> {
 
         expect(fetched.status).toEqual(200)
         expect(data['data']['redeemedAt']).not.toBeNull()
+    })
+
+    test('PATCH /users/:userId/rewards/:rewardDate/redeem reward not exist', async ()=> {
+        await fetch(`${host}/users/1/rewards?at=2099-05-10T12:00:00Z`)
+        const fetched = await fetch(`${host}/users/1/rewards/2099-07-10T00:00:00Z/redeem`, {
+            method: 'patch',
+        })
+
+        expect(fetched.status).toEqual(404)
+    })
+
+    test('PATCH /users/:userId/rewards/:rewardDate/redeem expired reward', async ()=> {
+        await fetch(`${host}/users/1/rewards?at=2011-05-10T12:00:00Z`)
+        const fetched = await fetch(`${host}/users/1/rewards/2011-05-10T00:00:00Z/redeem`, {
+            method: 'patch',
+        })
+
+        expect(fetched.status).toEqual(410)
     })
 })
