@@ -19,12 +19,56 @@ export class AppService {
 
             // todo: check param & query is valid
 
-            await rewardService.generateReward(userId, time)
+            await rewardService.generateRewards(userId, time)
+            const data = await rewardService.getRewards(userId)
 
-            res.status(200)
+            res.status(200).json({
+                data: data,
+            })
         })
-        this.app.patch('/users/:userId/rewards/:availableAt/redeem', (req, res)=> {
+        this.app.patch('/users/:userId/rewards/:rewardDate/redeem', async (req, res)=> {
+            const userId = req.params['userId']
+            const rewardDate = new Date(req.params['rewardDate'])
+            let reward = await rewardService.getReward(userId, rewardDate)
 
+            // todo: check param & query is valid
+
+            if(!reward) {
+                res.status(404).json({
+                    error: {
+                        message: 'Reward not found.',
+                    }
+                })
+                return
+            }
+
+            if(Date.now() > reward.expiresAt.getTime()) {
+                res.status(410).json({
+                    error: {
+                        message: 'This reward is already expired.',
+                    }
+                })
+                return
+            }
+
+            // I'm not sure need this feature or not.
+            /*
+            if(reward.redeemedAt !== null) {
+                res.status(410).json({
+                    error: {
+                        message: 'This reward is already redeemed.',
+                    }
+                })
+                return
+            }
+            */
+
+            await rewardService.redeemReward(userId, rewardDate)
+            reward = await rewardService.getReward(userId, rewardDate)
+
+            res.status(200).json({
+                data: reward,
+            })
         })
     }
 
